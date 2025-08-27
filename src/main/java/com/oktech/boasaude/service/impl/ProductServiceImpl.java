@@ -7,12 +7,14 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.data.jpa.domain.Specification; // 
 
 import com.oktech.boasaude.dto.CreateProductDto;
 import com.oktech.boasaude.entity.Product;
 import com.oktech.boasaude.entity.Shop;
 import com.oktech.boasaude.entity.User;
 import com.oktech.boasaude.repository.ProductRepository;
+import com.oktech.boasaude.repository.specification.ProductSpecification; //  Importação da sua classe Specification
 import com.oktech.boasaude.service.ProductService;
 
 /**
@@ -20,6 +22,9 @@ import com.oktech.boasaude.service.ProductService;
  * Ele implementa a interface ProductService e fornece métodos para gerenciar produtos.
  * @author João Martins
  * @version 1.0
+ * @author Helder
+ * @version 1.1
+ * Implementação do filtro de produtos por múltiplos critérios.
  */
 
 @Service
@@ -154,4 +159,22 @@ public class ProductServiceImpl implements ProductService {
         return productRepository.findByShopId(shopId, pageable);
     }
 
+     // Implementação do novo método de filtro ---
+    /**
+     * Busca produtos de forma paginada com base em múltiplos filtros opcionais.
+     * @param name Nome do produto (busca parcial, case-insensitive).
+     * @param category Categoria do produto.
+     * @param shopId ID da loja à qual o produto pertence.
+     * @param pageable Objeto com informações de paginação e ordenação.
+     * @return Uma página (Page) de produtos que correspondem aos critérios de filtro.
+     */
+    @Override
+    public Page<Product> findProducts(String name, String category, UUID shopId, Pageable pageable) {
+        // Delega a criação da lógica de consulta para a classe ProductSpecification
+        Specification<Product> spec = ProductSpecification.filterBy(name, category, shopId);
+
+        // Utiliza o método findAll do repositório que aceita uma Specification
+        return productRepository.findAll(spec, pageable);
+
+    }
 }

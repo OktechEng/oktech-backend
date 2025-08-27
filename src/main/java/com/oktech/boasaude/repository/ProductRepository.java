@@ -1,12 +1,13 @@
 package com.oktech.boasaude.repository;
 
-import com.oktech.boasaude.entity.Product;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-import java.util.UUID;
+import com.oktech.boasaude.entity.Product;
 
 /**
  * Repositório para operações CRUD com a entidade Product.
@@ -16,9 +17,11 @@ import java.util.UUID;
  * @version 1.0
  * @author Lucas do Ouro
  * @version 1.1 - Adicionado método para buscar produtos por ID de loja.
+ * @author Helder Araujo
+ * @version 1.2 - Adicionado suporte a especificações JPA.
  */
 
-public interface ProductRepository extends JpaRepository<Product, UUID> {
+public interface ProductRepository extends JpaRepository<Product, UUID>, JpaSpecificationExecutor<Product> {
     Page<Product> findAllByShopId(UUID shopId, Pageable pageable);
 
     Page<Product> findByNameContainingIgnoreCase(String name, Pageable pageable);
