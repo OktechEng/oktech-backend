@@ -16,14 +16,15 @@ public record ShopResponseDto(
         UUID id,
         String name,
         String description,
-        String cnpj) {
+        String cnpj,
+        Boolean active) {
     /**
      * Construtor para criar um ShopResponseDto a partir de uma entidade Shop.
      * 
      * @param shop A entidade Shop a ser convertida.
      */
     public ShopResponseDto(Shop shop) {
-        this(shop.getId(), shop.getName(), shop.getDescription(), shop.getCnpj());
+        this(shop.getId(), shop.getName(), shop.getDescription(), shop.getCnpj(), shop.getActive());
     }
 
 }

@@ -26,4 +26,10 @@ public interface ShopService {
     Page<ShopResponseDto> getAllShops(Pageable pageable); // Obtém todas as lojas
 
     Shop getShopById(UUID id);
+
+    ShopResponseDto activateShop(UUID id, User currentUser);
+
+    ShopResponseDto deactivateShop(UUID id, User currentUser);
+
+    Page<ShopResponseDto> getAllShopsIncludingInactive(Pageable pageable);
 }

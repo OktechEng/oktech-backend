@@ -61,9 +61,12 @@ public class ProductServiceImpl implements ProductService {
 
         Shop shop = shopServiceImpl.getShopById(shopId);
 
-
         if(!shop.getOwner().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("You do not have permission to create products for this shop.");
+        }
+
+        if (!shop.getActive()) {
+            throw new IllegalArgumentException("Cannot create products for deactivated shop.");
         }
 
         Product product = new Product(createProductDto, shop);
@@ -79,8 +82,14 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     public Product getProductById(UUID id) {
-        return productRepository.findById(id)
+        Product product = productRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Product not found with id: " + id));
+        
+        if (!product.getShop().getActive()) {
+            throw new IllegalArgumentException("Product is from a deactivated shop.");
+        }
+        
+        return product;
     }
 
     /**
@@ -90,6 +99,11 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     public Page<Product> getAllProducts(Pageable pageable) {
+        return productRepository.findByShopActiveTrue(pageable);
+    }
+
+    @Override
+    public Page<Product> getAllProductsIncludingInactive(Pageable pageable) {
         return productRepository.findAll(pageable);
     }
 
@@ -107,6 +121,10 @@ public class ProductServiceImpl implements ProductService {
 
         if(!product.getShop().getOwner().getId().equals(currentUser.getId())) {
             throw new AccessDeniedException("You do not have permission to update this product.");
+        }
+
+        if (!product.getShop().getActive()) {
+            throw new IllegalArgumentException("Cannot update product from deactivated shop.");
         }
 
         if(CreateProductDto.price() <= 0){
@@ -140,6 +158,10 @@ public class ProductServiceImpl implements ProductService {
             throw new AccessDeniedException("You do not have permission to delete this product.");
         }
 
+        if (!product.getShop().getActive()) {
+            throw new IllegalArgumentException("Cannot delete product from deactivated shop.");
+        }
+
         productRepository.delete(product);
     }
 
@@ -151,6 +173,8 @@ public class ProductServiceImpl implements ProductService {
      */
     @Override
     public Page<Product> getProductsByShopId(UUID shopId, Pageable pageable) {
+        // Verifica se a loja está ativa antes de retornar os produtos
+        Shop shop = shopServiceImpl.getShopById(shopId);
         return productRepository.findByShopId(shopId, pageable);
     }
 

@@ -28,6 +28,8 @@ public interface ProductService {
 
     Page<Product> getAllProducts(Pageable pageable);
 
+    Page<Product> getAllProductsIncludingInactive(Pageable pageable);
+
     Product updateProduct(UUID id, CreateProductDto product, User currentUser);
 
     void deleteProduct(UUID id, User currentUser);

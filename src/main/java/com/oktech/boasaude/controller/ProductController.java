@@ -29,6 +29,7 @@ import com.oktech.boasaude.dto.CreateProductDto;
 import com.oktech.boasaude.dto.ProductResponseDto;
 import com.oktech.boasaude.entity.Product;
 import com.oktech.boasaude.entity.User;
+import com.oktech.boasaude.entity.UserRole;
 import com.oktech.boasaude.service.ProductService;
 
 /**
@@ -147,5 +148,35 @@ public class ProductController {
             logger.error("Error deleting product: {}", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("message", "Error deleting product"));
         }
+    }
+
+    /**
+     * Lista todos os produtos (incluindo de lojas inativas) com paginação.
+     * Apenas administradores podem acessar este endpoint.
+     * @param pageable Objeto Pageable para paginação.
+     * @param authentication Objeto Authentication do Spring Security.
+     * @return ResponseEntity com a lista de todos os produtos paginados.
+     */
+    @GetMapping("/get-all-including-inactive")
+    public ResponseEntity<Page<ProductResponseDto>> getAllProductsIncludingInactive(
+        @ParameterObject @PageableDefault(page = 0, size = 10) Pageable pageable,
+        Authentication authentication) {
+        
+        if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
+            logger.warn("User not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        User currentUser = (User) authentication.getPrincipal();
+        if (currentUser.getRole() != UserRole.ADMIN) {
+            logger.warn("User not authorized to access inactive products");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
+        Page<Product> productsPage = productService.getAllProductsIncludingInactive(pageable);
+
+        Page<ProductResponseDto> products = productsPage.map(ProductResponseDto::new);
+        logger.info("All products (including inactive) retrieved successfully, count: {}", products.getTotalElements());
+        return ResponseEntity.ok(products);
     }
 }

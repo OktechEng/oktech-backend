@@ -52,6 +52,9 @@ public class Shop {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
+    @Column(nullable = false)
+    private Boolean active = true; // Status de ativação da loja
+
 
     public Shop(ShopCreateRequestDto dto, User owner) {
         this.name = dto.name();

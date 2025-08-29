@@ -78,8 +78,14 @@ public class ShopServiceImpl implements ShopService {
     // Obtém a loja pelo ID
     @Override
     public Shop getShopById(UUID id) {
-        return shopRepository.findById(id)
+        Shop shop = shopRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Shop not found."));
+        
+        if (!shop.getActive()) {
+            throw new IllegalArgumentException("Shop is deactivated.");
+        }
+        
+        return shop;
     }
     
 
@@ -87,13 +93,18 @@ public class ShopServiceImpl implements ShopService {
     @Override
     public ShopResponseDto getShopbyuser(User user) {
         return shopRepository.findByOwnerId(user.getId()) // Se a loja for encontrada, converte para ShopResponseDto
-                .map(ShopResponseDto::new) // Retorna a loja encontrada como ShopResponseDto
+                .map(shop -> {
+                    if (!shop.getActive()) {
+                        throw new IllegalArgumentException("Loja está desativada.");
+                    }
+                    return new ShopResponseDto(shop);
+                }) // Retorna a loja encontrada como ShopResponseDto
                 .orElseThrow(() -> new IllegalArgumentException("Loja não encontrada para o usuário."));
     }
 
     @Override
     public Page<ShopResponseDto> getAllShops(Pageable pageable) {
-        return shopRepository.findAll(pageable)
+        return shopRepository.findAllByActiveTrue(pageable)
                 .map(shop -> new ShopResponseDto(shop)); // Converte cada loja para ShopResponseDto
     }
 
@@ -147,6 +158,42 @@ public class ShopServiceImpl implements ShopService {
         shopRepository.save(shop);
 
         return new ShopResponseDto(shop);
+    }
+
+    @Override
+    public ShopResponseDto activateShop(UUID id, User currentUser) {
+        Shop shop = shopRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Shop not found."));
+
+        if (!shop.getOwner().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You are not the owner of this shop");
+        }
+
+        shop.setActive(true);
+        shopRepository.save(shop);
+
+        return new ShopResponseDto(shop);
+    }
+
+    @Override
+    public ShopResponseDto deactivateShop(UUID id, User currentUser) {
+        Shop shop = shopRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Shop not found."));
+
+        if (!shop.getOwner().getId().equals(currentUser.getId())) {
+            throw new AccessDeniedException("You are not the owner of this shop");
+        }
+
+        shop.setActive(false);
+        shopRepository.save(shop);
+
+        return new ShopResponseDto(shop);
+    }
+
+    @Override
+    public Page<ShopResponseDto> getAllShopsIncludingInactive(Pageable pageable) {
+        return shopRepository.findAll(pageable)
+                .map(shop -> new ShopResponseDto(shop)); // Converte cada loja para ShopResponseDto
     }
 
 

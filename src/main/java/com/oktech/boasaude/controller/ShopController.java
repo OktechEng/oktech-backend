@@ -14,6 +14,7 @@ import com.oktech.boasaude.dto.ShopCreateRequestDto;
 import com.oktech.boasaude.dto.ShopResponseDto;
 import com.oktech.boasaude.entity.Product;
 import com.oktech.boasaude.entity.User;
+import com.oktech.boasaude.entity.UserRole;
 import com.oktech.boasaude.service.ShopService; 
 import com.oktech.boasaude.service.ProductService;
 
@@ -57,14 +58,38 @@ public class ShopController {
     }
 
     /**
-     * Lista todas as lojas com paginação.
+     * Lista todas as lojas ativas com paginação.
      * @param pageable Objeto Pageable para paginação.
-     * @return ResponseEntity com a lista de lojas paginadas.
+     * @return ResponseEntity com a lista de lojas ativas paginadas.
      */
     @GetMapping("/all")
     public ResponseEntity<Page<ShopResponseDto>> ListgetAllShops(Pageable pageable) {
         
         Page<ShopResponseDto> shops = shopService.getAllShops(pageable);
+        return ResponseEntity.ok(shops);
+    }
+
+    /**
+     * Lista todas as lojas (incluindo inativas) com paginação.
+     * Apenas administradores podem acessar este endpoint.
+     * @param pageable Objeto Pageable para paginação.
+     * @param authentication Objeto Authentication do Spring Security.
+     * @return ResponseEntity com a lista de todas as lojas paginadas.
+     */
+    @GetMapping("/all-including-inactive")
+    public ResponseEntity<Page<ShopResponseDto>> getAllShopsIncludingInactive(Pageable pageable, Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
+            logger.warn("User not authenticated");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        User currentUser = (User) authentication.getPrincipal();
+        if (currentUser.getRole() != UserRole.ADMIN) {
+            logger.warn("User not authorized to access inactive shops");
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        
+        Page<ShopResponseDto> shops = shopService.getAllShopsIncludingInactive(pageable);
         return ResponseEntity.ok(shops);
     }
 
@@ -154,6 +179,52 @@ public class ShopController {
 
         ShopResponseDto shopResponse = shopService.updateShop(id, shopCreateDto, currentUser);
         logger.info("Shop updated successfully for user ID: {}", currentUser.getId());
+
+        return ResponseEntity.ok(shopResponse);
+    }
+
+    /**
+     * Ativa uma loja associada ao usuário autenticado.
+     * @param id ID da loja a ser ativada.
+     * @param authentication Objeto Authentication do Spring Security.
+     * @return ResponseEntity com a loja ativada.
+     */
+    @PutMapping("/{id}/activate")
+    public ResponseEntity<ShopResponseDto> activateShop(@PathVariable UUID id, Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
+            logger.warn("User not authenticated");
+            return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .build();
+        }
+        
+        User currentUser = (User) authentication.getPrincipal();
+
+        ShopResponseDto shopResponse = shopService.activateShop(id, currentUser);
+        logger.info("Shop activated successfully for user ID: {}", currentUser.getId());
+
+        return ResponseEntity.ok(shopResponse);
+    }
+
+    /**
+     * Desativa uma loja associada ao usuário autenticado.
+     * @param id ID da loja a ser desativada.
+     * @param authentication Objeto Authentication do Spring Security.
+     * @return ResponseEntity com a loja desativada.
+     */
+    @PutMapping("/{id}/deactivate")
+    public ResponseEntity<ShopResponseDto> deactivateShop(@PathVariable UUID id, Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
+            logger.warn("User not authenticated");
+            return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .build();
+        }
+        
+        User currentUser = (User) authentication.getPrincipal();
+
+        ShopResponseDto shopResponse = shopService.deactivateShop(id, currentUser);
+        logger.info("Shop deactivated successfully for user ID: {}", currentUser.getId());
 
         return ResponseEntity.ok(shopResponse);
     }

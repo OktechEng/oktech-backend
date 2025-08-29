@@ -26,4 +26,6 @@ public interface ShopRepository extends JpaRepository<Shop, UUID> {
     List<Shop> findAllByNameContainingIgnoreCase(String name); // Busca lojas por nome, ignorando maiúsculas e
                                                                // minúsculas
 
+    org.springframework.data.domain.Page<Shop> findAllByActiveTrue(org.springframework.data.domain.Pageable pageable); // Busca todas as lojas ativas com paginação
+
 }
