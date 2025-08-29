@@ -15,6 +15,8 @@ import com.oktech.boasaude.entity.UserRole;
  * 
  * @author Arlindo Neto
  * @version 1.0
+ * @author Helder
+ * @version 1.1
  */
 public interface UserService {
     User createUser(CreateUserDto createUserDto);
