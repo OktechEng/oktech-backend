@@ -26,8 +26,11 @@ public interface UserService {
     Page<User> getAllUsers(Pageable pageable);
 
     User updateUser(UUID id, User user);
-
-    void deleteUser(UUID id);
+ /**
+     * Deleta (soft delete) o usuário atualmente autenticado.
+     * @param currentUser O objeto do usuário logado, fornecido pelo Spring Security.
+     */
+     void deleteUserById(UUID userId);
 
     User getUserByEmail(String email);
 

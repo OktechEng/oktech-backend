@@ -51,7 +51,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @EqualsAndHashCode(of = "id")
 @EntityListeners(AuditingEntityListener.class)
-@SQLDelete(sql = "UPDATE users SET is_active = false WHERE id = ?")
+@SQLDelete(sql = "UPDATE users SET is_active = false WHERE id = ?") // toda vez que alguem deletar vai fazer na verdade um update
 @Where(clause = "is_active = true")  // todas as queries vão ignorar usuários desativados
 public class User implements UserDetails {
     @Id
