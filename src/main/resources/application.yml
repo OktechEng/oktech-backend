@@ -1,12 +1,19 @@
 spring:
   application:
     name: boasaude
+  servlet:
+    multipart:
+      max-file-size: 1MB      # Tamanho máximo por arquivo
+      max-request-size: 5MB   # Tamanho máximo da requisição
+      enabled: true            # Habilita multipart
 
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
-
+# Configuração de armazenamento de arquivos
+storage:
+  path: uploads/images         # Pasta padrão para imagens
 
 jwt:
   secret: mysecret

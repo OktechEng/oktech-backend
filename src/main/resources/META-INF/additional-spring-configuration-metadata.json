@@ -1,6 +1,13 @@
-{"properties": [{
-  "name": "jwt.secret",
-  "type": "java.lang.String",
-  "description": "Secret key for JWT signing and validation",
-  "defaultValue": "mysecret"
-}]}
+{"properties": [
+  {
+    "name": "jwt.secret",
+    "type": "java.lang.String",
+    "description": "Secret key for JWT signing and validation",
+    "defaultValue": "mysecret"
+  },
+  {
+    "name": "storage.path",
+    "type": "java.lang.String",
+    "description": "A description for 'storage.path'"
+  }
+]}

@@ -3,11 +3,9 @@ package com.oktech.boasaude.controller;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,10 +14,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.RequestBody;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -30,8 +26,7 @@ import org.springframework.data.web.PageableDefault;
 
 import com.oktech.boasaude.dto.CreateOrderItemDto;
 import com.oktech.boasaude.dto.OrderResponseDto;
-import com.oktech.boasaude.entity.Order;
-import com.oktech.boasaude.entity.OrderItem;
+
 import com.oktech.boasaude.entity.User;
 import com.oktech.boasaude.service.OrderService;
 
@@ -57,13 +52,13 @@ public class OrderController {
         this.orderService = orderService;
     }
 
-    @PostMapping("/create")
+    @PostMapping()
     public ResponseEntity<OrderResponseDto> createOrder(
         @Valid @RequestBody @NotEmpty List<CreateOrderItemDto> createOrderDto, 
         Authentication authentication) {
         
         User currentUser = (User) authentication.getPrincipal();
-        Order order = orderService.createOrder(currentUser, createOrderDto);
+        OrderResponseDto order = orderService.createOrder(currentUser, createOrderDto);
         
         logger.info("Order created successfully for user: {}", currentUser.getId());
         
@@ -71,8 +66,7 @@ public class OrderController {
             logger.info("Order item added: Product ID: {}, Quantity: {}", item.productId(), item.quantity());
         }
 
-        OrderResponseDto responseDto = new OrderResponseDto(order);
-        return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
+        return new ResponseEntity<>(order, HttpStatus.CREATED);
     }
 
     @GetMapping()
@@ -82,11 +76,9 @@ public class OrderController {
         
         User currentUser = (User) authentication.getPrincipal();
 
-        Page<Order> orders = orderService.getOrdersByUserId(pageable, currentUser);
+        Page<OrderResponseDto> response = orderService.getOrdersByUserId(pageable, currentUser);
 
-        Page<OrderResponseDto> response = orders.map(OrderResponseDto::new);
-
-        logger.info("Retrieved {} orders for user: {}", orders.getTotalElements(), currentUser.getId());
+        logger.info("Retrieved {} orders for user: {}", response.getTotalElements(), currentUser.getId());
         
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -105,11 +97,11 @@ public class OrderController {
             return ResponseEntity.badRequest().build();
         }
 
-        Order updatedOrder = orderService.updateOrderStatus(orderId, status, currentUser);
+        OrderResponseDto updatedOrder = orderService.updateOrderStatus(orderId, status, currentUser);
         
         logger.info("Order status updated successfully for order ID: {}", orderId);
         
-        return new ResponseEntity<>(new OrderResponseDto(updatedOrder), HttpStatus.OK);
+        return new ResponseEntity<>(updatedOrder, HttpStatus.OK);
     }
 
 }

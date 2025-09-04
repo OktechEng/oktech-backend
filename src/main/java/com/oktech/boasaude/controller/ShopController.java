@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.oktech.boasaude.dto.ProductResponseDto;
 import com.oktech.boasaude.dto.ShopCreateRequestDto;
 import com.oktech.boasaude.dto.ShopResponseDto;
-import com.oktech.boasaude.entity.Product;
 import com.oktech.boasaude.entity.User;
 import com.oktech.boasaude.service.ShopService; 
 import com.oktech.boasaude.service.ProductService;
@@ -29,7 +28,9 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 
 /**
  * ShopController é responsável por gerenciar as operações relacionadas às lojas.
@@ -62,22 +63,24 @@ public class ShopController {
      * @return ResponseEntity com a lista de lojas paginadas.
      */
     @GetMapping("/all")
-    public ResponseEntity<Page<ShopResponseDto>> ListgetAllShops(Pageable pageable) {
+    public ResponseEntity<Page<ShopResponseDto>> ListgetAllShops(@ParameterObject @PageableDefault(page = 0, size = 10) Pageable pageable) {
         
         Page<ShopResponseDto> shops = shopService.getAllShops(pageable);
         return ResponseEntity.ok(shops);
     }
 
     @GetMapping("/{shopId}/products")
-    public ResponseEntity<Page<ProductResponseDto>> getProductsByShopId(@PathVariable UUID shopId, Pageable pageable) {
+    public ResponseEntity<Page<ProductResponseDto>> getProductsByShopId(
+        @PathVariable UUID shopId, 
+        @ParameterObject @PageableDefault(page = 0, size = 10) Pageable pageable
+    ) {
         
         logger.info("Fetching products for shop ID: {}", shopId);
 
-        Page<Product> productsPage = productService.getProductsByShopId(shopId, pageable);
+        Page<ProductResponseDto> productsPage = productService.getProductsByShopId(shopId, pageable);
 
-        Page<ProductResponseDto> responseDtoPage = productsPage.map(ProductResponseDto::new);
 
-        return ResponseEntity.ok(responseDtoPage);
+        return ResponseEntity.ok(productsPage);
     }
 
     /**
@@ -86,7 +89,7 @@ public class ShopController {
      * @param authentication Objeto Authentication do Spring Security.
      * @return ResponseEntity com a loja criada.
      */
-    @PostMapping("/create")
+    @PostMapping()
     public ResponseEntity<ShopResponseDto> createShop(@Valid @RequestBody ShopCreateRequestDto shopCreateDto, Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
             logger.warn("User not authenticated");

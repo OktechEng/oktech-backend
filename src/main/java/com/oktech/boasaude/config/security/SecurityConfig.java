@@ -13,7 +13,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.cors.CorsConfiguration;
-
+import org.springframework.http.HttpMethod;
 import com.oktech.boasaude.service.TokenService;
 import com.oktech.boasaude.service.UserService;
 
@@ -37,8 +37,17 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Habilita CORS no Spring Security
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/v1/auth/**", "/actuator/**", "/v3/api-docs/**", "/swagger-ui.html",
-                                "/swagger-ui/**", "v1/products/get/**", "v1/shops/all", "v1/shops/{shopId}/products")
+                        .requestMatchers(HttpMethod.GET, "v1/products/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "api/product-imagens/**").permitAll()
+                        .requestMatchers(
+                            "/v1/auth/**", 
+                            "/actuator/**", 
+                            "/v3/api-docs/**", 
+                            "/swagger-ui.html",
+                            "/swagger-ui/**", 
+                            "v1/shops/all", 
+                            "v1/shops/{shopId}/products"
+                        )
                         .permitAll()
                         .anyRequest()
                         .authenticated())

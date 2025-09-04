@@ -52,10 +52,6 @@ public class ShopServiceImpl implements ShopService {
 
     @Override
     public ShopResponseDto createShop(User user, ShopCreateRequestDto dto) {
-        // Verifica se o usuário já possui uma loja associada
-        if (!shopRepository.findAllByNameContainingIgnoreCase(user.getName()).isEmpty()) {
-            throw new IllegalArgumentException("Usuário já possui uma loja associada.");
-        }
         // Valida se o usuário já possui uma loja
         if (shopRepository.findByOwnerId(user.getId()).isPresent()) {
             throw new IllegalArgumentException("Usuário já possui uma loja associada.");

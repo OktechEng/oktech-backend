@@ -9,5 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import com.oktech.boasaude.entity.Order;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
-    Page<Order> findByUserId(UUID userId, Pageable pageable);
+    Page<Order> findByUserIdOrderByCreatedAtDesc(UUID userId, Pageable pageable);
 }

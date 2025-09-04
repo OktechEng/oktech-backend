@@ -27,7 +27,6 @@ import org.springframework.data.web.PageableDefault;
 
 import com.oktech.boasaude.dto.CreateProductDto;
 import com.oktech.boasaude.dto.ProductResponseDto;
-import com.oktech.boasaude.entity.Product;
 import com.oktech.boasaude.entity.User;
 import com.oktech.boasaude.service.ProductService;
 
@@ -53,7 +52,7 @@ public class ProductController {
         this.productService = productService;
     }
     
-    @PostMapping("/create/{shopId}")
+    @PostMapping("/{shopId}")
     public ResponseEntity<ProductResponseDto> createProduct
     (
         @Valid @RequestBody CreateProductDto createProductDto, 
@@ -70,10 +69,10 @@ public class ProductController {
     
             User user = (User) authentication.getPrincipal();
             
-            Product productResponse = productService.createProduct(createProductDto, shopId, user);
+            ProductResponseDto productResponse = productService.createProduct(createProductDto, shopId, user);
             
-            logger.info("Product created successfully with ID: {}", productResponse.getId());
-            return ResponseEntity.status(HttpStatus.CREATED).body(new ProductResponseDto(productResponse));
+            logger.info("Product created successfully with ID: {}", productResponse.id());
+            return ResponseEntity.status(HttpStatus.CREATED).body(productResponse);
         }
         catch(Exception e) {
             logger.error("Error creating product: {}", e.getMessage());
@@ -81,30 +80,29 @@ public class ProductController {
         }
     }
 
-    @GetMapping("/get")
+    @GetMapping("")
     public ResponseEntity<Page<ProductResponseDto>> getAllProducts(
         @ParameterObject @PageableDefault(page = 0, size = 10) Pageable pageable) {
         
-        Page<Product> productsPage = productService.getAllProducts(pageable);
+        Page<ProductResponseDto> productsPage = productService.getAllProducts(pageable);
 
-        Page<ProductResponseDto> products = productsPage.map(ProductResponseDto::new);
-        logger.info("Products retrieved successfully, count: {}", products.getTotalElements());
-        return ResponseEntity.ok(products);
+        logger.info("Products retrieved successfully, count: {}", productsPage.getTotalElements());
+        return ResponseEntity.ok(productsPage);
     }
 
-    @GetMapping("/get/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<ProductResponseDto> getProductById(@PathVariable UUID id) {
-        Product product = productService.getProductById(id);
+        ProductResponseDto product = productService.getProductByIdResponse(id);
         if (product == null) {
             logger.warn("Product not found with ID: {}", id);
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
 
         logger.info("Product retrieved successfully with ID: {}", id);
-        return ResponseEntity.ok(new ProductResponseDto(product));
+        return ResponseEntity.ok(product);
     }
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<ProductResponseDto> updateProduct(
         @PathVariable UUID id, 
         @Valid @RequestBody CreateProductDto createProductDto, 
@@ -117,10 +115,10 @@ public class ProductController {
     
             User user = (User) authentication.getPrincipal();
 
-            Product updatedProduct = productService.updateProduct(id, createProductDto, user);
+            ProductResponseDto updatedProduct = productService.updateProduct(id, createProductDto, user);
             
-            logger.info("Product updated successfully with ID: {}", updatedProduct.getId());
-            return ResponseEntity.ok(new ProductResponseDto(updatedProduct));
+            logger.info("Product updated successfully with ID: {}", updatedProduct.id());
+            return ResponseEntity.ok(updatedProduct);
 
         }catch(Exception e) {
             logger.error("Error updating product: {}", e.getMessage());
@@ -128,7 +126,7 @@ public class ProductController {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Map<String, String>> deleteProduct(@PathVariable UUID id, Authentication authentication) {
         try{
             if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
