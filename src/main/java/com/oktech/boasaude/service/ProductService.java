@@ -9,7 +9,6 @@ import com.oktech.boasaude.dto.CreateProductDto;
 import com.oktech.boasaude.dto.ProductResponseDto;
 import com.oktech.boasaude.entity.Product;
 import com.oktech.boasaude.entity.User;
-
 /**
  * ProductService é responsável por gerenciar as operações relacionadas aos produtos.
  * Ele pode incluir funcionalidades como listar produtos, buscar detalhes de um produto específico,
@@ -18,6 +17,9 @@ import com.oktech.boasaude.entity.User;
  * @version 1.0 
  * @author Lucas do Ouro
  * @version 1.1 - Adicionado método para obter produtos por ID de loja.
+ * @author Helder Silva
+ * @version 1.2 - Adicionado método para buscar produtos com filtros opcionais.
+ * 
  */
 
 
@@ -35,5 +37,18 @@ public interface ProductService {
     void deleteProduct(UUID id, User currentUser);
 
     Page<ProductResponseDto> getProductsByShopId(UUID shopId, Pageable pageable);
+
+    /**
+     * Busca produtos de forma paginada com base em múltiplos filtros opcionais.
+     * @param name Nome do produto (busca parcial, case-insensitive).
+     * @param category Categoria do produto.
+     * @param shopId ID da loja à qual o produto pertence.
+     * @param pageable Objeto com informações de paginação e ordenação.
+     * @return Uma página (Page) de produtos que correspondem aos critérios de filtro.
+     */
+    Page<Product> findProducts(String name, String category, UUID shopId, Pageable pageable); 
+    /**
+     *  funcionalidade para buscar produtos com esses filtros
+     */
 
 }

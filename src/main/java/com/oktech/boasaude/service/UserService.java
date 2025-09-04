@@ -15,6 +15,8 @@ import com.oktech.boasaude.entity.UserRole;
  * 
  * @author Arlindo Neto
  * @version 1.0
+ * @author Helder
+ * @version 1.1
  */
 public interface UserService {
     User createUser(CreateUserDto createUserDto);
@@ -24,8 +26,11 @@ public interface UserService {
     Page<User> getAllUsers(Pageable pageable);
 
     User updateUser(UUID id, User user);
-
-    void deleteUser(UUID id);
+ /**
+     * Deleta (soft delete) o usuário atualmente autenticado.
+     * @param currentUser O objeto do usuário logado, fornecido pelo Spring Security.
+     */
+     void deleteUserById(UUID userId);
 
     User getUserByEmail(String email);
 

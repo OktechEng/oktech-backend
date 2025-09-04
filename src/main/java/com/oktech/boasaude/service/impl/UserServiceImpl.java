@@ -11,7 +11,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.oktech.boasaude.dto.CreateUserDto;
-
 import com.oktech.boasaude.entity.User;
 import com.oktech.boasaude.entity.UserRole;
 import com.oktech.boasaude.repository.UserRepository;
@@ -127,21 +126,17 @@ public class UserServiceImpl implements UserService {
      * Deleta um usuário pelo ID.
      * Realiza uma exclusão lógica, desativando o usuário.
      * 
-     * @param id ID do usuário a ser deletado.
+     * 
      */
 
     @Override
-    public void deleteUser(UUID id) {
-        User existingUser = userRepository.findById(id).orElse(null);
-        logger.info("Deleting user with ID: {}", id);
-        if (existingUser != null) {
-            logger.info("User found for ID: {}", id);
-            existingUser.setActive(false); // Soft delete
-            userRepository.save(existingUser);
-        } else {
-            logger.error("User not found for ID: {}", id);
-            throw new IllegalArgumentException("User not found: " + id);
+     public void deleteUserById(UUID userId) {
+        if (!userRepository.existsById(userId)) {
+            // Lançar exceção é importante para o controller saber que o usuário não foi encontrado
+            throw new IllegalArgumentException("User not found with id: " + userId);
         }
+        // Simplesmente chame deleteById. O @SQLDelete na sua entidade fará o soft delete.
+        userRepository.deleteById(userId);
     }
 
     /**

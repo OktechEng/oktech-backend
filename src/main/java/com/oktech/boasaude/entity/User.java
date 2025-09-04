@@ -6,6 +6,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -16,6 +18,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import com.oktech.boasaude.dto.CreateUserDto;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
@@ -39,6 +42,8 @@ import lombok.Setter;
  * 
  * @author Arlindo Neto
  * @version 1.0
+ * @author Helder
+ * @version 1.1
  * @author Lucas Ouro
  * @version 1.1
  * Create a list of addresses associated with the user.
@@ -55,6 +60,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @EqualsAndHashCode(of = "id")
 @EntityListeners(AuditingEntityListener.class)
+@SQLDelete(sql = "UPDATE users SET is_active = false WHERE id = ?") // toda vez que alguem deletar vai fazer na verdade um update
+@Where(clause = "is_active = true")  // todas as queries vão ignorar usuários desativados
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -67,6 +74,7 @@ public class User implements UserDetails {
     private String cpf; // Brazilian CPF (Cadastro de Pessoas Físicas)
 
     private String password; // Encrypted password
+ 
 
     @Enumerated(EnumType.STRING)
     private AuthProvider authProvider; // Possible values: LOCAL, GOOGLE, FACEBOOK
@@ -77,11 +85,12 @@ public class User implements UserDetails {
     private UserRole role; // Possible values: USER, ADMIN, PRODUCTOR
 
     private String phone; // Phone number of the user
-
+   
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL , orphanRemoval = true)
-    private List<Address> addresses = new ArrayList<>(); // List of addresses associated with the user
-
-    private boolean isActive; // Indicates if the user account is active
+    private List<Address> addresses = new ArrayList<>();
+     // List of addresses associated with the user
+    @Column(name = "is_active", nullable = false)
+    private boolean isActive = true; // Indicates if the user account is active
     // Timestamps for creation and last update
     @CreatedDate
     private LocalDateTime createdAt;
