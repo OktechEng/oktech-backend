@@ -38,17 +38,5 @@ public interface ProductService {
 
     Page<ProductResponseDto> getProductsByShopId(UUID shopId, Pageable pageable);
 
-    /**
-     * Busca produtos de forma paginada com base em múltiplos filtros opcionais.
-     * @param name Nome do produto (busca parcial, case-insensitive).
-     * @param category Categoria do produto.
-     * @param shopId ID da loja à qual o produto pertence.
-     * @param pageable Objeto com informações de paginação e ordenação.
-     * @return Uma página (Page) de produtos que correspondem aos critérios de filtro.
-     */
-    Page<Product> findProducts(String name, String category, UUID shopId, Pageable pageable); 
-    /**
-     *  funcionalidade para buscar produtos com esses filtros
-     */
 
 }

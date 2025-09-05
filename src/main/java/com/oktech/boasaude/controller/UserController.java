@@ -25,7 +25,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @GetMapping
+    @GetMapping()
     public ResponseEntity<UserResponseDto> getUser(Authentication authentication) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User)) {
             logger.warn("User not authenticated");
