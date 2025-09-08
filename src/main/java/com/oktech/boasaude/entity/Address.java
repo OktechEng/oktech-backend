@@ -7,8 +7,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.oktech.boasaude.dto.AddressCreateRequestDto;
-
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.FetchType;
@@ -30,33 +29,41 @@ import lombok.Setter;
 @EntityListeners(AuditingEntityListener.class)
 public class Address {
 
-    @Id
+   @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-
-    private String street;
-    private String city;
-    private String state;
-    private String complement;
-    private String cep;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(name = "zip_code", nullable = false, length = 9)
+    private String zipCode;
+
+    @Column(nullable = false)
+    private String street;
+
+    @Column(nullable = false, length = 20)
+    private String number;
+
+    @Column(length = 100)
+    private String complement;
+
+    @Column(nullable = false, length = 100)
+    private String neighborhood;
+
+    @Column(nullable = false, length = 100)
+    private String city;
+
+    @Column(nullable = false, length = 2)
+    private String state;
+    
+    @Column(name = "address_type", nullable = false, length = 50)
+    private String addressType; // Considere usar um Enum aqui no futuro
 
     @CreatedDate
     private LocalDateTime createdAt;
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
-
-    // Seu construtor customizado, agora com a sintaxe correta
-    public Address(AddressCreateRequestDto dto, User user) {
-        this.street = dto.street();
-        this.city = dto.city();
-        this.state = dto.state();
-        this.complement = dto.complement();
-        this.cep = dto.cep();
-        this.user = user;
-    }
 }

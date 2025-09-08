@@ -1,27 +1,28 @@
 package com.oktech.boasaude.controller;
 
-import com.oktech.boasaude.dto.AddressCreateRequestDto;
-import com.oktech.boasaude.dto.AddressResponseDto;
-import com.oktech.boasaude.entity.User;
-import com.oktech.boasaude.service.AddressService;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.oktech.boasaude.dto.AddressCreateRequestDto;
+import com.oktech.boasaude.dto.AddressResponseDto;
+import com.oktech.boasaude.entity.User;
+import com.oktech.boasaude.service.AddressService;
 
 import jakarta.validation.Valid;
 
@@ -100,7 +101,17 @@ public class AddressController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
-
+    // --- ATUALIZAR UM ENDEREÇO EXISTENTE (O NOVO MÉTODO) ---
+    @PutMapping("/{id}")
+    public ResponseEntity<AddressResponseDto> updateAddress(
+            @PathVariable UUID id,
+            @RequestBody @Valid AddressCreateRequestDto updateDto,
+            @AuthenticationPrincipal User currentUser) {
+        
+        AddressResponseDto updatedAddress = addressService.updateAddress(id, updateDto, currentUser);
+        return ResponseEntity.ok(updatedAddress);
+    }
+    
     @DeleteMapping("/{addressId}")
     public ResponseEntity<Map<String, String>> deleteAddress(
             @PathVariable UUID addressId,
