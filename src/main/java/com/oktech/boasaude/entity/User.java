@@ -61,7 +61,7 @@ import lombok.Setter;
 @EqualsAndHashCode(of = "id")
 @EntityListeners(AuditingEntityListener.class)
 @SQLDelete(sql = "UPDATE users SET is_active = false WHERE id = ?") // toda vez que alguem deletar vai fazer na verdade um update
-@Where(clause = "is_active = true")  // todas as queries vão ignorar usuários desativados
+@Where(clause = "status != 'DELETED'") // MUDANÇA AQUI: Agora vemos usuários ATIVOS e SUSPENSOS
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -89,14 +89,17 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL , orphanRemoval = true)
     private List<Address> addresses = new ArrayList<>();
      // List of addresses associated with the user
-    @Column(name = "is_active", nullable = false)
-    private boolean isActive = true; // Indicates if the user account is active
-    // Timestamps for creation and last update
+   @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private UserStatus status = UserStatus.ACTIVE;
+     // Timestamps for creation and last update
     @CreatedDate
     private LocalDateTime createdAt;
     // Timestamp when the user was created
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    
 
     /**
      * Construtor para criar um usuário com o papel de USUÁRIO.
@@ -107,9 +110,8 @@ public class User implements UserDetails {
         this.cpf = createUserDto.cpf();
         this.phone = createUserDto.phone();
         this.authProvider = AuthProvider.LOCAL; // Default to local authentication
-        this.role = UserRole.USER; // Default role is USER
-        this.isActive = true; // New users are active by default
-
+        this.role = UserRole.USER; // Default role is USER     
+        this.status = UserStatus.ACTIVE; // // New users are active by default
     }
 
     @Override
@@ -146,6 +148,6 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return isActive;
+        return this.status == UserStatus.ACTIVE; // Só pode logar se estiver ATIVO
     }
 }
