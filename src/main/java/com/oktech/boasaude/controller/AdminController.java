@@ -42,4 +42,10 @@ public class AdminController {
         adminService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
+    
+    @GetMapping("/dashboard")
+    public ResponseEntity<DashboardStatsDto> getDashboardStatistics() {
+        DashboardStatsDto stats = adminService.getDashboardStatistics();
+        return ResponseEntity.ok(stats);
+    }
 }

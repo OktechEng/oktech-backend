@@ -1,5 +1,6 @@
 package com.oktech.boasaude.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -8,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.oktech.boasaude.entity.User;
 import com.oktech.boasaude.entity.UserRole;
+import com.oktech.boasaude.entity.UserStatus;
 
 /**
  * Repositório para operações CRUD com a entidade User.
@@ -27,5 +29,9 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     boolean existsByCpf(String cpf);
 
     List<User> findAllByRole(UserRole role);
+
+    long countByCreatedAtAfter(LocalDateTime date);
+    
+    long countByRoleAndStatus(UserRole role, UserStatus status);
 
 }
