@@ -4,7 +4,7 @@ import com.oktech.boasaude.dto.AdminUserViewDto;
 import com.oktech.boasaude.dto.CreateSubscriptionDto;
 import com.oktech.boasaude.dto.DashboardStatsDto;
 import com.oktech.boasaude.dto.SubscriptionViewDto;
-import com.oktech.boasaude.entity.Subscription;
+import com.oktech.boasaude.entity.*;
 import com.oktech.boasaude.entity.User;
 import com.oktech.boasaude.entity.UserRole;
 import com.oktech.boasaude.entity.UserStatus;
@@ -92,12 +92,12 @@ public class AdminServiceImpl implements AdminService {
 
     @Override
     public Page<SubscriptionViewDto> findSubscriptionsByCustomerName(String customerName, Pageable pageable) {
-        return subscriptionRepository.findByCustomerNameContainingIgnoreCase(customerName)
+        List<SubscriptionViewDto> dtos = subscriptionRepository.findByCustomerNameContainingIgnoreCase(customerName)
             .stream()
             .map(this::toDto)
-            .collect(Collectors.toCollection(() ->
-                new PageImpl<>(new ArrayList<>(), pageable, 0)
-            ));
+            .collect(Collectors.toList());
+        
+        return new PageImpl<>(dtos, pageable, dtos.size());
     }
 
     @Override
@@ -116,20 +116,21 @@ public class AdminServiceImpl implements AdminService {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime startOfMonth = YearMonth.now().atDay(1).atStartOfDay();
         LocalDateTime endOfMonth = YearMonth.now().atEndOfMonth().atTime(23, 59, 59);
+
         // 1. Coleta dados de Usuários
         long newUsers = userRepository.countByCreatedAtAfter(startOfDay);
         long consumers = userRepository.countByRoleAndStatus(UserRole.USER, UserStatus.ACTIVE);
         long producers = userRepository.countByRoleAndStatus(UserRole.PRODUCTOR, UserStatus.ACTIVE);
 
-        // 2. Coleta dados Financeiros (pode precisar de queries customizadas)
+        // 2. Coleta dados Financeiros
         BigDecimal revToday = paymentRepository.sumSuccessfulPaymentsAfter(startOfDay);
-        BigDecimal revMonth = paymentRepository.sumSuccessfulPaymentsThisMonth();
+        BigDecimal revMonth = paymentRepository.sumSuccessfulPaymentsBetween(startOfMonth, endOfMonth);
 
         // 3. Coleta dados de Operações
-        long activeSubs = subscriptionRepository.countByStatus(SubscriptionStatus.ACTIVE);
+        long activeSubs = subscriptionRepository.findByIsActiveTrue().size();
 
         // 4. Coleta dados de Tarefas Administrativas
-        long pendingProducts = productRepository.countByStatus(ProductStatus.PENDING_APPROVAL);
+        long pendingProducts = 0; // TODO: Implement product approval status tracking
 
         // 5. Monta e retorna o DTO
         return new DashboardStatsDto(newUsers, consumers, producers, revToday, revMonth, activeSubs, pendingProducts);
