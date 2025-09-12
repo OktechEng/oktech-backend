@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.oktech.boasaude.dto.ProductResponseDto;
 import com.oktech.boasaude.dto.ShopCreateRequestDto;
 import com.oktech.boasaude.dto.ShopResponseDto;
+import com.oktech.boasaude.dto.ShopFilterDto;
 import com.oktech.boasaude.entity.Product;
 import com.oktech.boasaude.entity.User;
 import com.oktech.boasaude.service.ShopService; 
@@ -21,6 +22,7 @@ import com.oktech.boasaude.service.ProductService;
 import org.springframework.security.core.Authentication;
 
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import jakarta.validation.Valid;
 
 import java.util.Map;
@@ -65,6 +67,26 @@ public class ShopController {
     public ResponseEntity<Page<ShopResponseDto>> ListgetAllShops(Pageable pageable) {
         
         Page<ShopResponseDto> shops = shopService.getAllShops(pageable);
+        return ResponseEntity.ok(shops);
+    }
+
+    /**
+     * Lista todas as lojas com filtros e paginação.
+     * @param name Filtro por nome da loja (opcional).
+     * @param description Filtro por descrição da loja (opcional).
+     * @param cnpj Filtro por CNPJ da loja (opcional).
+     * @param pageable Objeto Pageable para paginação.
+     * @return ResponseEntity com a lista de lojas filtradas e paginadas.
+     */
+    @GetMapping("/all/filtered")
+    public ResponseEntity<Page<ShopResponseDto>> getAllShopsWithFilters(
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String description,
+            @RequestParam(required = false) String cnpj,
+            Pageable pageable) {
+        
+        ShopFilterDto filters = new ShopFilterDto(name, description, cnpj);
+        Page<ShopResponseDto> shops = shopService.getAllShopsWithFilters(filters, pageable);
         return ResponseEntity.ok(shops);
     }
 

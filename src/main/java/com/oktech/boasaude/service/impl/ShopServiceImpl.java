@@ -2,6 +2,7 @@ package com.oktech.boasaude.service.impl;
 
 import com.oktech.boasaude.dto.ShopCreateRequestDto;
 import com.oktech.boasaude.dto.ShopResponseDto;
+import com.oktech.boasaude.dto.ShopFilterDto;
 import com.oktech.boasaude.entity.Shop;
 import com.oktech.boasaude.entity.User;
 import com.oktech.boasaude.entity.UserRole;
@@ -95,6 +96,53 @@ public class ShopServiceImpl implements ShopService {
     public Page<ShopResponseDto> getAllShops(Pageable pageable) {
         return shopRepository.findAll(pageable)
                 .map(shop -> new ShopResponseDto(shop)); // Converte cada loja para ShopResponseDto
+    }
+
+    @Override
+    public Page<ShopResponseDto> getAllShopsWithFilters(ShopFilterDto filters, Pageable pageable) {
+        String name = filters.name();
+        String description = filters.description();
+        String cnpj = filters.cnpj();
+
+        Page<Shop> shops;
+
+        // Aplica filtros baseado nos parâmetros fornecidos
+        if (name != null && !name.trim().isEmpty() && 
+            description != null && !description.trim().isEmpty() && 
+            cnpj != null && !cnpj.trim().isEmpty()) {
+            // Todos os filtros
+            shops = shopRepository.findByNameContainingIgnoreCaseAndDescriptionContainingIgnoreCaseAndCnpjContaining(
+                name, description, cnpj, pageable);
+        } else if (name != null && !name.trim().isEmpty() && 
+                   description != null && !description.trim().isEmpty()) {
+            // Nome e descrição
+            shops = shopRepository.findByNameContainingIgnoreCaseAndDescriptionContainingIgnoreCase(
+                name, description, pageable);
+        } else if (name != null && !name.trim().isEmpty() && 
+                   cnpj != null && !cnpj.trim().isEmpty()) {
+            // Nome e CNPJ
+            shops = shopRepository.findByNameContainingIgnoreCaseAndCnpjContaining(
+                name, cnpj, pageable);
+        } else if (description != null && !description.trim().isEmpty() && 
+                   cnpj != null && !cnpj.trim().isEmpty()) {
+            // Descrição e CNPJ
+            shops = shopRepository.findByDescriptionContainingIgnoreCaseAndCnpjContaining(
+                description, cnpj, pageable);
+        } else if (name != null && !name.trim().isEmpty()) {
+            // Apenas nome
+            shops = shopRepository.findByNameContainingIgnoreCase(name, pageable);
+        } else if (description != null && !description.trim().isEmpty()) {
+            // Apenas descrição
+            shops = shopRepository.findByDescriptionContainingIgnoreCase(description, pageable);
+        } else if (cnpj != null && !cnpj.trim().isEmpty()) {
+            // Apenas CNPJ
+            shops = shopRepository.findByCnpjContaining(cnpj, pageable);
+        } else {
+            // Nenhum filtro - retorna todas as lojas
+            shops = shopRepository.findAll(pageable);
+        }
+
+        return shops.map(shop -> new ShopResponseDto(shop));
     }
 
     // Valida o CNPJ usando o padrão definido

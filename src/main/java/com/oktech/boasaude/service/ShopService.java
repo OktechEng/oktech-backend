@@ -1,6 +1,7 @@
 package com.oktech.boasaude.service;
 
 import com.oktech.boasaude.dto.ShopResponseDto;
+import com.oktech.boasaude.dto.ShopFilterDto;
 import com.oktech.boasaude.entity.Shop;
 import com.oktech.boasaude.entity.User;
 
@@ -24,6 +25,8 @@ public interface ShopService {
     void deleteShop(UUID id, User currentUser);
 
     Page<ShopResponseDto> getAllShops(Pageable pageable); // Obtém todas as lojas
+
+    Page<ShopResponseDto> getAllShopsWithFilters(ShopFilterDto filters, Pageable pageable); // Obtém todas as lojas com filtros
 
     Shop getShopById(UUID id);
 }
