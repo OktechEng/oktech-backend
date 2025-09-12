@@ -1,12 +1,16 @@
 package com.oktech.boasaude.service.impl;
 
 import com.oktech.boasaude.dto.AdminUserViewDto;
+import com.oktech.boasaude.dto.CreateSubscriptionDto;
 import com.oktech.boasaude.dto.DashboardStatsDto;
+import com.oktech.boasaude.dto.SubscriptionViewDto;
+import com.oktech.boasaude.entity.*;
 import com.oktech.boasaude.entity.User;
 import com.oktech.boasaude.entity.UserRole;
 import com.oktech.boasaude.entity.UserStatus;
 import com.oktech.boasaude.repository.PaymentRepository;
 import com.oktech.boasaude.repository.ProductRepository;
+import com.oktech.boasaude.repository.SubscriptionRepository;
 import com.oktech.boasaude.repository.UserRepository;
 import com.oktech.boasaude.service.AdminService;
 
@@ -14,6 +18,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.PageImpl;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,7 +35,80 @@ public class AdminServiceImpl implements AdminService {
 
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
-    private final PaymentRepository paymentRepository; // <-- INJETANDO O NOVO REPOSITÓRIO // Supondo que exista
+    private final PaymentRepository paymentRepository;
+    private final SubscriptionRepository subscriptionRepository;
+
+    // Converter para DTO
+    private SubscriptionViewDto toDto(Subscription subscription) {
+        return new SubscriptionViewDto(
+            subscription.getId(),
+            subscription.getCustomerName(),
+            subscription.getPlan(),
+            subscription.getStartDate(),
+            subscription.getEndDate(),
+            subscription.getIsActive()
+        );
+    }
+
+    @Override
+    public Page<SubscriptionViewDto> getAllSubscriptions(Pageable pageable) {
+        return subscriptionRepository.findAll(pageable)
+            .map(this::toDto);
+    }
+
+    @Override
+    public SubscriptionViewDto getSubscriptionDetails(UUID subscriptionId) {
+        return subscriptionRepository.findById(subscriptionId)
+            .map(this::toDto)
+            .orElseThrow(() -> new EntityNotFoundException("Subscription not found"));
+    }
+
+    @Override
+    public SubscriptionViewDto createSubscription(CreateSubscriptionDto createDto) {
+        Subscription subscription = new Subscription(
+            createDto.customerName(),
+            createDto.plan(),
+            createDto.startDate(),
+            true
+        );
+        subscription.setEndDate(createDto.endDate());
+        
+        return toDto(subscriptionRepository.save(subscription));
+    }
+
+    @Override
+    public SubscriptionViewDto updateSubscriptionStatus(UUID subscriptionId, boolean active) {
+        Subscription subscription = subscriptionRepository.findById(subscriptionId)
+            .orElseThrow(() -> new EntityNotFoundException("Subscription not found"));
+            
+        subscription.setIsActive(active);
+        return toDto(subscriptionRepository.save(subscription));
+    }
+
+    @Override
+    public void deleteSubscription(UUID subscriptionId) {
+        subscriptionRepository.deleteById(subscriptionId);
+    }
+
+    @Override
+    public Page<SubscriptionViewDto> findSubscriptionsByCustomerName(String customerName, Pageable pageable) {
+        List<SubscriptionViewDto> dtos = subscriptionRepository.findByCustomerNameContainingIgnoreCase(customerName)
+            .stream()
+            .map(this::toDto)
+            .collect(Collectors.toList());
+        
+        return new PageImpl<>(dtos, pageable, dtos.size());
+    }
+
+    @Override
+    public List<SubscriptionViewDto> findExpiringSubscriptions(int days) {
+        return subscriptionRepository.findSubscriptionsExpiringBetween(
+            LocalDate.now(),
+            LocalDate.now().plusDays(days)
+        ).stream()
+        .map(this::toDto)
+        .collect(Collectors.toList());
+    }
 
 
     @Override
@@ -34,20 +116,21 @@ public class AdminServiceImpl implements AdminService {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime startOfMonth = YearMonth.now().atDay(1).atStartOfDay();
         LocalDateTime endOfMonth = YearMonth.now().atEndOfMonth().atTime(23, 59, 59);
+
         // 1. Coleta dados de Usuários
         long newUsers = userRepository.countByCreatedAtAfter(startOfDay);
         long consumers = userRepository.countByRoleAndStatus(UserRole.USER, UserStatus.ACTIVE);
         long producers = userRepository.countByRoleAndStatus(UserRole.PRODUCTOR, UserStatus.ACTIVE);
 
-        // 2. Coleta dados Financeiros (pode precisar de queries customizadas)
+        // 2. Coleta dados Financeiros
         BigDecimal revToday = paymentRepository.sumSuccessfulPaymentsAfter(startOfDay);
-        BigDecimal revMonth = paymentRepository.sumSuccessfulPaymentsThisMonth();
+        BigDecimal revMonth = paymentRepository.sumSuccessfulPaymentsBetween(startOfMonth, endOfMonth);
 
         // 3. Coleta dados de Operações
-        long activeSubs = subscriptionRepository.countByStatus(SubscriptionStatus.ACTIVE);
+        long activeSubs = subscriptionRepository.findByIsActiveTrue().size();
 
         // 4. Coleta dados de Tarefas Administrativas
-        long pendingProducts = productRepository.countByStatus(ProductStatus.PENDING_APPROVAL);
+        long pendingProducts = 0; // TODO: Implement product approval status tracking
 
         // 5. Monta e retorna o DTO
         return new DashboardStatsDto(newUsers, consumers, producers, revToday, revMonth, activeSubs, pendingProducts);

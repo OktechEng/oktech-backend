@@ -1,6 +1,7 @@
 package com.oktech.boasaude.controller;
 
 import com.oktech.boasaude.dto.AdminUserViewDto;
+import com.oktech.boasaude.dto.DashboardStatsDto;
 import com.oktech.boasaude.dto.UpdateUserStatusDto;
 import com.oktech.boasaude.service.AdminService;
 import jakarta.validation.Valid;
