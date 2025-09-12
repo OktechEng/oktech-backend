@@ -6,6 +6,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 import org.springframework.data.annotation.CreatedDate;
@@ -46,7 +49,7 @@ import lombok.Setter;
  * @version 1.1
  * @author Lucas Ouro
  * @version 1.1
- * Create a list of addresses associated with the user.
+ *          Create a list of addresses associated with the user.
  * 
  * @see CreateUserDto
  * @see UserDetails
@@ -60,8 +63,9 @@ import lombok.Setter;
 @NoArgsConstructor
 @EqualsAndHashCode(of = "id")
 @EntityListeners(AuditingEntityListener.class)
-@SQLDelete(sql = "UPDATE users SET is_active = false WHERE id = ?") // toda vez que alguem deletar vai fazer na verdade um update
-@Where(clause = "status != 'DELETED'") // MUDANÇA AQUI: Agora vemos usuários ATIVOS e SUSPENSOS
+@SQLDelete(sql = "UPDATE users SET status = 'INACTIVE' WHERE id = ?")
+@FilterDef(name = "activeFilter", parameters = @ParamDef(name = "status", type = String.class))
+@Filter(name = "activeFilter", condition = "status = :status")
 public class User implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -74,7 +78,6 @@ public class User implements UserDetails {
     private String cpf; // Brazilian CPF (Cadastro de Pessoas Físicas)
 
     private String password; // Encrypted password
- 
 
     @Enumerated(EnumType.STRING)
     private AuthProvider authProvider; // Possible values: LOCAL, GOOGLE, FACEBOOK
@@ -85,21 +88,19 @@ public class User implements UserDetails {
     private UserRole role; // Possible values: USER, ADMIN, PRODUCTOR
 
     private String phone; // Phone number of the user
-   
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL , orphanRemoval = true)
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Address> addresses = new ArrayList<>();
-     // List of addresses associated with the user
-   @Enumerated(EnumType.STRING)
+    // List of addresses associated with the user
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserStatus status = UserStatus.ACTIVE;
-     // Timestamps for creation and last update
+    // Timestamps for creation and last update
     @CreatedDate
     private LocalDateTime createdAt;
     // Timestamp when the user was created
     @LastModifiedDate
     private LocalDateTime updatedAt;
-
-    
 
     /**
      * Construtor para criar um usuário com o papel de USUÁRIO.
@@ -110,7 +111,7 @@ public class User implements UserDetails {
         this.cpf = createUserDto.cpf();
         this.phone = createUserDto.phone();
         this.authProvider = AuthProvider.LOCAL; // Default to local authentication
-        this.role = UserRole.USER; // Default role is USER     
+        this.role = UserRole.USER; // Default role is USER
         this.status = UserStatus.ACTIVE; // // New users are active by default
     }
 
